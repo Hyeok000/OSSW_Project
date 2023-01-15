@@ -1,15 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[35]:
-
-
 import pandas as pd
 import numpy as np
-
-
-# In[36]:
-
 
 #한국은 나중에 추가 예정
 countries = ['US']#, 'KR']
@@ -26,10 +19,6 @@ for c in countries:
 #df = pd.read_csv('KR_youtube_trending_data.csv')
 df.info()
 
-
-# In[38]:
-
-
 #카테고리 ID를 통해 카테고리 이름 추가
 import plotly.express as px
 import json
@@ -41,33 +30,13 @@ for cat in categories:
     cat_dict[int(cat["id"])] = cat["snippet"]["title"]
 df['category_name'] = df['categoryId'].map(cat_dict)
 
-
-# In[39]:
-
-
 df.info()
-
-
-# In[40]:
-
 
 df.head()
 
-
-# In[41]:
-
-
 df.shape
 
-
-# In[42]:
-
-
 df.columns
-
-
-# In[43]:
-
 
 #사용하지 않는 열 삭제
 df = df.drop(columns=['video_id', 'publishedAt', 'channelId',
@@ -75,88 +44,36 @@ df = df.drop(columns=['video_id', 'publishedAt', 'channelId',
        'dislikes', 'comment_count', 'thumbnail_link', 'comments_disabled',
        'ratings_disabled'])
 
-
-# In[44]:
-
-
 df.columns
 
-
-# In[45]:
-
-
 df.info()
-
-
-# In[46]:
-
 
 #null 값의 개수 확인
 df.isnull().sum()
 
-
-# In[47]:
-
-
 #title이 중복되는 행 삭제
 df = df.drop_duplicates(subset='title', keep="first")
 
-
-# In[48]:
-
-
 df.info()
 
-
-# In[49]:
-
-
 df.isnull().sum()
-
-
-# In[50]:
-
 
 #NaN 값을 공백으로 채움
 df = df.fillna('')
 
-
-# In[51]:
-
-
 #null 값 존재X
 df.isnull().sum()
 
-
-# In[52]:
-
-
 df.info()
-
-
-# In[53]:
-
 
 #제목,채널 이름, 태그, 설명, 국가, 카테고리를 개요로 그룹화
 df['overview'] = df['title']+" "+df['channelTitle']+" "+ df['tags']+" "+df['description']+" "+df['country']+" "+df['category_name'] 
 
-
-# In[54]:
-
-
 df.head()
-
-
-# In[55]:
-
 
 #채널 이름, 태그. 설명, 국가, 카테고리 열 삭제
 df.drop(columns=['channelTitle', 'tags', 'description', 'country', 'category_name'], inplace=True)
 df.head()
-
-
-# In[56]:
-
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -187,12 +104,7 @@ import pyLDAvis.gensim_models
 import pickle 
 import pyLDAvis
 
-
-# In[57]:
-
-
 # Remove Non-english words
-
 df['overview']= df['overview'].map(lambda x: re.sub('([^\x00-\x7F])+ ','', x))
 
 # Tokenization(토큰화)
@@ -227,19 +139,11 @@ def lemmatization(texts, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV']):
   texts_out.append([token.lemma_ for token in doc if token.pos_ in allowed_postags])
  return texts_out
 
-
-# In[58]:
-
-
 all_words_nostops = remove_stopwords(all_words)
 all_words_bigrams = create_bigrams(all_words_nostops)
 nlp = spacy.load("en_core_web_sm", disable=['parser', 'ner'])
 data_lemmatized = lemmatization(all_words_bigrams, allowed_postags=['NOUN', 'ADJ', 'VERB', 'ADV'])
 print(data_lemmatized[:1])
-
-
-# In[27]:
-
 
 # Create Dictionary
 id2word = corpora.Dictionary(data_lemmatized)
@@ -253,10 +157,6 @@ texts = data_lemmatized
 # Term Document Frequency
 corpus = [id2word.doc2bow(text) for text in texts]
 
-
-# In[28]:
-
-
 # Building LDA model for 10 topics
 lda_model = gensim.models.LdaMulticore(corpus=corpus,
                                        id2word=id2word,
@@ -266,26 +166,14 @@ lda_model = gensim.models.LdaMulticore(corpus=corpus,
                                        passes=10,
                                        per_word_topics=True)
 
-
-# In[29]:
-
-
 # Printing the Keywords in the 10 topics
 pprint(lda_model.print_topics())
 doc_lda = lda_model[corpus]
-
-
-# In[25]:
-
 
 for i, topic_list in enumerate(doc_lda):
     if i==5:
         break
     print(i+1,'번째 문서의 topic 비율은',topic_list)
-
-
-# In[30]:
-
 
 def Sort_Tuple(tup):  
     return(sorted(tup, key = lambda x: x[1], reverse = True))   
@@ -299,18 +187,10 @@ for n in range(len(df)):
     topic_number.append(sorted_doc_topics[0][0])
     prob.append(sorted_doc_topics[0][1])
 
-
-# In[31]:
-
-
 df['Doc'] = doc_number
 df['Topic'] = topic_number
 df['Probability'] = prob
 df.to_csv("doc_topic_matrix.csv", index=False)
-
-
-# In[32]:
-
 
 def recommend_by_title(title, df):
 
@@ -343,21 +223,6 @@ def recommend_by_title(title, df):
         
     return recommended
 
-
-# In[33]:
-
-
 df.info()
 
-
-# In[34]:
-
-
 recommend_by_title('korea', df)
-
-
-# In[ ]:
-
-
-
-
