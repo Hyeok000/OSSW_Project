@@ -11,7 +11,7 @@ import numpy as np
 # In[2]:
 
 
-#한국은 나중에 추가 예정
+#한국은 후반에 추가
 countries = ['US']#, 'KR']
 
 df = pd.DataFrame()
@@ -264,10 +264,12 @@ print(corpus[1])
 # In[25]:
 
 
-# Building LDA model for 10 topics
+topic_num = 100
+
+# Building LDA model for 100 topics
 lda_model = gensim.models.LdaMulticore(corpus=corpus,
                                        id2word=id2word,
-                                       num_topics=100, 
+                                       num_topics=topic_num, 
                                        random_state=100,
                                        chunksize=100,
                                        passes=20,
@@ -290,7 +292,7 @@ pprint(lda_model.print_topics())
 doc_lda = lda_model[corpus]
 
 
-# In[62]:
+# In[28]:
 
 
 def Sort_Tuple(tup):  
@@ -330,12 +332,6 @@ df.head(10)
 # In[32]:
 
 
-df.head()
-
-
-# In[387]:
-
-
 import random
 
 def recommend_by_title(title, df):
@@ -352,7 +348,7 @@ def recommend_by_title(title, df):
 
 
     try:
-        sam = df[df['overview'].map(lambda x: all(word in x for word in title_list))]#개요 중에 키워드가 포함되는 샘플들
+        sam = df[df['overview'].map(lambda x: all(word in x for word in title_list))] #개요 중에 키워드가 포함되는 샘플들
         #print(sam['title'].count())
         #print("2:",sam)
         sam = sam.sample(n=1)
@@ -378,22 +374,29 @@ def recommend_by_title(title, df):
     return recommended
 
 
-# In[34]:
+# In[33]:
 
 
 df.info()
 
 
-# In[64]:
+# In[34]:
+
+
+df[df['Topic']== 0]
+
+
+# In[86]:
 
 
 #recommend_by_title('our first family intro!!', df)
 recommend_by_title('smartphone', df)
 
 
-# In[78]:
+# In[36]:
 
 
+#한글 추가
 countries = ['KR']
 
 df2 = pd.DataFrame()
@@ -405,11 +408,10 @@ for c in countries:
     df3['country'] = c
     df2 = pd.concat([df2, df3])
 
-#df = pd.read_csv('KR_youtube_trending_data.csv')
 df2.info()
 
 
-# In[79]:
+# In[37]:
 
 
 with open("KR_category_id.json") as f:
@@ -420,31 +422,31 @@ for cat in categories:
 df2['category_name'] = df2['categoryId'].map(cat_dict)
 
 
-# In[80]:
+# In[38]:
 
 
 df2.info()
 
 
-# In[81]:
+# In[39]:
 
 
 df2.head()
 
 
-# In[82]:
+# In[40]:
 
 
 df2.shape
 
 
-# In[83]:
+# In[41]:
 
 
 df2.columns
 
 
-# In[84]:
+# In[42]:
 
 
 #사용하지 않는 열 삭제
@@ -454,78 +456,78 @@ df2 = df2.drop(columns=['video_id', 'publishedAt', 'channelId',
        'ratings_disabled'])
 
 
-# In[86]:
+# In[43]:
 
 
 df2.columns
 
 
-# In[87]:
+# In[44]:
 
 
 df2.info()
 
 
-# In[88]:
+# In[45]:
 
 
 #null 값의 개수 확인
 df2.isnull().sum()
 
 
-# In[89]:
+# In[46]:
 
 
 #title이 중복되는 행 삭제
 df2 = df2.drop_duplicates(subset='title', keep="first")
 
 
-# In[91]:
+# In[47]:
 
 
 df2.info()
 
 
-# In[92]:
+# In[48]:
 
 
 df2.isnull().sum()
 
 
-# In[93]:
+# In[49]:
 
 
 #NaN 값을 공백으로 채움
 df2 = df2.fillna('')
 
 
-# In[95]:
+# In[50]:
 
 
 #null 값 존재X
 df2.isnull().sum()
 
 
-# In[96]:
+# In[51]:
 
 
 df2.info()
 
 
-# In[97]:
+# In[52]:
 
 
 #제목,채널 이름, 태그, 설명, 국가, 카테고리를 개요로 그룹화
 df2['overview'] = df2['title']+" "+df2['channelTitle']+" "+ df2['tags']+" "+df2['description']+" "+df2['country']+" "+df2['category_name'] 
 
 
-# In[98]:
+# In[53]:
 
 
 df2.head()
 
 
-# In[99]:
+# In[54]:
 
 
 #채널 이름, 태그. 설명, 국가, 카테고리 열 삭제
@@ -533,80 +535,107 @@ df2.drop(columns=['channelTitle', 'tags', 'description', 'country', 'category_na
 df2.head()
 
 
-# In[100]:
+# In[55]:
 
 
+#한글이 아니면 공백으로 바꿈
 df2['overview']= df2['overview'].str.replace('[^ㄱ-ㅎㅏ-ㅣ가-힣]',' ',regex=True)
 
 
-# In[101]:
+# In[56]:
 
 
 df2['overview'].head()
 
 
-# In[102]:
-
-
-df2['overview'].replace({'': np.nan})
-df2['overview'].replace(r'^\s*$', None, regex=True)
-
-
-# In[103]:
-
-
-df2['overview'].dropna(how='any', inplace=True)
-
-
-# In[104]:
+# In[57]:
 
 
 df2.head()
 
 
-# In[105]:
+# In[58]:
 
 
 print(df2['overview'].isnull().values.any()) 
 
 
-# In[106]:
+# In[59]:
 
 
 df2.info()
 
 
-# In[107]:
+# In[60]:
 
 
 all_words_kr = list(sentence_to_words(df2['overview']))
 
 
-# In[110]:
+# In[61]:
 
 
 len(all_words_kr)
 
 
-# In[112]:
+# In[101]:
 
 
-all_words_nostops_kr = remove_stopwords(all_words_kr)
+#all_words_kr
 
 
-# In[113]:
+# In[63]:
+
+
+import csv
+stop_words_kr = pd.read_csv('stopword.txt', sep = "\r", encoding = 'utf-8', quoting=csv.QUOTE_NONE)
+
+
+# In[64]:
+
+
+stop_words_kr
+
+
+# In[65]:
+
+
+stop_words_kr = stop_words_kr.values.tolist()
+
+
+# In[100]:
+
+
+#stop_words_kr
+
+
+# In[67]:
+
+
+# stop_words.extend(['']) #extend existing stop word list if needed
+def remove_stopwords_kr(texts):
+ return [[word for word in gensim.utils.simple_preprocess(str(doc)) if word not in stop_words_kr] for doc in texts]
+
+
+# In[68]:
+
+
+all_words_nostops_kr = remove_stopwords_kr(all_words_kr)
+
+
+# In[69]:
 
 
 # Create Dictionary
-id2word_kr = corpora.Dictionary(all_words_kr)
+id2word_kr = corpora.Dictionary(all_words_nostops_kr)
 
 # Filter out tokens that appear in only 1 documents and appear in more than 90% of the documents
-id2word_kr.filter_extremes(no_below=2, no_above=0.9) #2개의 이상의 문서들, 0.9이상의 문서들
+id2word_kr.filter_extremes(no_below=2, no_above=0.9) #2개의 이하의 문서들, 0.9이상의 문서들
 
 print(id2word_kr[1])
 
 # Create Corpus(말뭉치 생성)
-texts_kr = all_words_kr
+texts_kr = all_words_nostops_kr
 
 print(texts_kr[1])
 
@@ -616,20 +645,20 @@ corpus_kr = [id2word_kr.doc2bow(text) for text in texts_kr]
 print(corpus_kr[1])
 
 
-# In[114]:
+# In[70]:
 
 
-# Building LDA model for 10 topics
+# Building LDA model for 100 topics
 lda_model_kr = gensim.models.LdaMulticore(corpus=corpus_kr,
                                        id2word=id2word_kr,
-                                       num_topics=100, 
+                                       num_topics=topic_num, 
                                        random_state=100,
                                        chunksize=100,
                                        passes=20,
                                        per_word_topics=True)
 
 
-# In[116]:
+# In[71]:
 
 
 vis_kr = pyLDAvis.gensim_models.prepare(lda_model_kr, corpus_kr, id2word_kr)
@@ -637,7 +666,7 @@ pyLDAvis.enable_notebook()
 pyLDAvis.display(vis_kr)
 
 
-# In[121]:
+# In[72]:
 
 
 # Printing the Keywords in the 10 topics
@@ -645,7 +674,7 @@ pprint(lda_model_kr.print_topics())
 doc_lda_kr = lda_model_kr[corpus_kr]
 
 
-# In[122]:
+# In[73]:
 
 
 doc_number_kr , topic_number_kr, prob_kr = [], [], []
@@ -656,17 +685,12 @@ for n in range(len(df2)):
     doc_number_kr.append(n)
     sorted_doc_topics = Sort_Tuple(get_document_topics)
     #print(sorted_doc_topics)
-    #i = sorted_doc_topics[0][0]
+
     try:
-       # if not sorted_doc_topics[0][0]:
-            #print('Null')
-           # topic_number.append((''))
-       # else:
         topic_number_kr.append(sorted_doc_topics[0][0])
     except IndexError:
         topic_number_kr.append((''))
-        #continue
-    #print(n)
+
     #print(topic_number)
     try:
         prob_kr.append(sorted_doc_topics[0][1])
@@ -674,7 +698,7 @@ for n in range(len(df2)):
         prob_kr.append((''))
 
 
-# In[123]:
+# In[74]:
 
 
 df2['Doc'] = doc_number_kr
@@ -682,44 +706,61 @@ df2['Topic'] = topic_number_kr
 df2['Probability'] = prob_kr
 
 
-# In[124]:
+# In[75]:
 
 
 df2.info()
 
 
-# In[125]:
+# In[76]:
 
 
 df2.head(10)
 
 
-# In[126]:
+# In[77]:
+
+
+for i in range(topic_num):
+    df2 = df2.replace({'Topic' : i}, i+topic_num)
+
+doc_num = int(df.tail(1)['Doc']) + 1
+for i in range(doc_num):
+    df2 = df2.replace({'Doc' : i}, i+doc_num)
+
+
+# In[78]:
+
+
+df.tail(10)
+
+
+# In[79]:
 
 
 df = pd.concat([df, df2])
 
 
-# In[128]:
+# In[80]:
 
 
 df
 
 
-# In[393]:
+# In[99]:
 
 
 recommend_by_title('bts, 방탄소년단', df)
 
 
-# In[319]:
+# In[82]:
 
 
 from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
-# In[388]:
+# In[83]:
 
 
 tk = Tk()
@@ -727,16 +768,13 @@ tk.title("Youtube Recommendation")
 tk.geometry("800x400+100+100")
 
 
-# In[389]:
+# In[84]:
 
 
-#label = Label(window, text='')
 global lists
 global listbox
 global sbar
 
-#sbar = Scrollbar(tk)
-#sbar.pack(side='bottom', fill='x')
 listbox = Listbox(tk, height = 0, selectmode = "extended", width = 300)#, xscrollcommand = sbar.set)
 
 def getTextInput():
@@ -766,11 +804,8 @@ textbox.pack()
 button.pack()
 
 
-# In[390]:
+# In[85]:
 
 
 tk.mainloop()
-
-
-# In[ ]:
 
